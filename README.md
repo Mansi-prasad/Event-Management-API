@@ -20,6 +20,48 @@ npm run server
 
 ---  
 
+## Database Schema  
+- **`users`**  
+  - Stores user details.  
+  - Ensures `email` is unique.  
+
+- **`events`**  
+  - Stores event details.   
+  - Ensures `title` is unique.  
+  - Enforces capacity between 1–1000.  
+
+- **`event_registrations`**  
+  - Maps users to events.  
+  - Enforces no duplicate registrations (`UNIQUE(event_id, user_id)`).  
+
+Below are the SQL table definitions used in this project:   
+```sql  
+-- Users table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL
+);  
+
+-- Events table
+CREATE TABLE events (  
+  id SERIAL PRIMARY KEY,
+  title TEXT UNIQUE NOT NULL,
+  event_datetime TIMESTAMP NOT NULL,
+  location TEXT,
+  capacity INTEGER NOT NULL CHECK (capacity > 0 AND capacity <= 1000)
+);  
+
+-- Event Registrations table
+CREATE TABLE event_registrations (  
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (event_id, user_id)
+);  
+```
+---  
+
 ## 📚 API Description  
 The Event Management API provides endpoints to:  
 * Create a new event  

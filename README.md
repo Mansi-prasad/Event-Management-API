@@ -1,6 +1,6 @@
 # Event Management API  
 
-The Event Management API is a RESTful service that allows you to create, manage, and track events and user registrations. It provides a set of endpoints for handling the entire event lifecycle, including creating events, registering users, listing upcoming events, and viewing event status.  
+The Event Management API is a RESTful service that allows to create, manage, and track events and user registrations. It provides a set of endpoints for handling the entire event lifecycle, including creating events, registering users, listing upcoming events, and viewing event status.  
 
 ---  
 
@@ -34,14 +34,16 @@ The Event Management API provides endpoints to:
 ## 🚀 API Endpoints (Example requests/responses)  
 1. Create Event  
 Request:  
-POST /api/events  
+`POST /api/events`  
 Content-Type: application/json  
+```json
 {
   "title": "Conference 2025",
   "event_datetime": "2025-11-15T09:00:00Z",
   "location": "Grand Hall",
   "capacity": 300
 }  
+```
 
 Response(Success):   
 {

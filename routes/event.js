@@ -5,15 +5,15 @@ import {
   registerForEvent,
   cancelRegistration,
   listUpcomingEvents,
-  getEventStats
-} from '../controllers/event.js';
+  getEventStatus,
+} from "../controllers/event.js";
 const router = express.Router();
 
-router.post('/', createEvent);
-router.get('/:id', getEventDetails);
-router.post('/:id/register', registerForEvent);
-router.post('/:id/cancel', cancelRegistration);
-router.get('/', listUpcomingEvents);
-router.get('/:id/stats', getEventStats);
+router.post("/", createEvent);
+router.get("/:id", getEventDetails);
+router.post("/:id/register", registerForEvent);
+router.delete("/:id/cancel", cancelRegistration);
+router.get("/", listUpcomingEvents);
+router.get("/:id/status", getEventStatus);
 
 export default router;

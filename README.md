@@ -83,7 +83,7 @@ Response:
 
 3. Register for Event  
 Request:  
-`POST /api/events/1/register` 
+`POST /api/events/1/register`   
 `Content-Type: application/json`  
 ```json
 {
@@ -121,7 +121,7 @@ Response (Past Event):
 
 4. Cancel Registration  
 Request:  
-`DELETE /api/events/1/cancel`
+`DELETE /api/events/1/cancel`  
 `Content-Type: application/json`  
 ```json
 {

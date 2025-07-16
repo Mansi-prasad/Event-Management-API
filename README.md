@@ -35,7 +35,7 @@ The Event Management API provides endpoints to:
 1. Create Event  
 Request:  
 `POST /api/events`  
-Content-Type: application/json  
+`Content-Type: application/json`  
 ```json
 {
   "title": "Conference 2025",
@@ -45,22 +45,26 @@ Content-Type: application/json
 }  
 ```
 
-Response(Success):   
+Response(Success):  
+```json 
 {
   "eventId": 4
 }  
+```
 Response(Validation Error - Capacity > 1000):  
+```json
 {
   "success": false,
   "error": "Capacity must be between 1 and 1000."
 }  
-
+```
 
 2. Get Event Details  
 Request:  
-GET /api/events/2 
+`GET /api/events/2 `
 
 Response:  
+```json
 {
   "id": 2,
   "title": "Tech Conference 2025",
@@ -75,63 +79,76 @@ Response:
       }
     ]
 }  
-
+```
 
 3. Register for Event  
 Request:  
-POST /api/events/1/register  
-Content-Type: application/json  
+`POST /api/events/1/register` 
+`Content-Type: application/json`  
+```json
 {
   "user_id": 1
 }  
-
+```
 Response(Success):  
+```json
 {
   "success":true,
   "message": "Registration successful."
-}  
+} 
+``` 
 Response (Duplicate Registration):  
+```json
 {
   "success": false,
   "error": "User is already registered for this event."
 }  
+```
 Response(Event full):  
+```json
 {
   "success": false,
   "error": "Event capacity has been reached."
 }  
+```
 Response (Past Event):  
+```json
 {
   "success": false,
   "error": "Cannot register for past events."
 }  
-
+```
 
 4. Cancel Registration  
 Request:  
-DELETE /api/events/1/cancel  
-Content-Type: application/json   
+`DELETE /api/events/1/cancel`
+`Content-Type: application/json`  
+```json
 {
   "user_id": 1
 }
-
+```
 Response (Success):  
+```json
 {
   "success": true,
   "message": "Registration cancelled."
-}   
+}  
+``` 
 Response (User not registered):  
+```json
 {
   "success": false,
   "error": "User is not registered for this event."
 }  
-
+```
 
 5. List Upcoming Events  
 Request:  
-GET /api/events
+`GET /api/events`
 
-Response:  
+Response: 
+```json 
 [
   {
     "id": 1,
@@ -148,16 +165,18 @@ Response:
       "capacity": 300
     }
 ]  
-
+```
 
 6. Event Status:  
 Request:  
-GET /api/events/2/status  
+`GET /api/events/2/status`  
 
 Response:  
+```json
 {
   "success": true,
   "totalRegistrations": 1,
   "remainingCapacity": 299,
   "percentageUsed": "0.33%"
 }  
+```

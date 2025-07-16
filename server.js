@@ -9,8 +9,7 @@ app.get("/", (req, res) => {
   res.send("Event Management API is running.");
 });
 
-const PORT = process.env.PORT || 3000;
-// const PORT = 3000;
+const PORT = 3000;
 app.use("/api/users", userRoute);
 app.use("/api/events", eventRoute);
 

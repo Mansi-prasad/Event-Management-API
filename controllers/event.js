@@ -7,17 +7,31 @@ export async function createEvent(req, res) {
     const { title, event_datetime, location, capacity } = req.body;
 
     if (!title || !event_datetime || capacity === undefined) {
-      return res
-        .status(400)
-        .json({ error: "Title, date/time, and capacity are required." });
+      return res.status(400).json({
+        success: false,
+        error: "Title, date/time, and capacity are required.",
+      });
     }
 
     if (typeof capacity !== "number" || capacity <= 0 || capacity > 1000) {
-      return res
-        .status(400)
-        .json({ error: "Capacity must be between 1 and 1000." });
+      return res.status(400).json({
+        success: false,
+        error: "Capacity must be between 1 and 1000.",
+      });
     }
 
+    // check for existing event title
+    const checkTitle = `SELECT id FROM events WHERE title = $1`;
+    const checkTitleExists = await pool.query(checkTitle, [title]);
+
+    if (checkTitleExists.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "An event with this title already exists. Please use another title.",
+      });
+    }
+    // Insert new event
     const insertQuery = `
       INSERT INTO events (title, event_datetime, location, capacity)
       VALUES ($1, $2, $3, $4)
@@ -30,10 +44,12 @@ export async function createEvent(req, res) {
       location,
       capacity,
     ]);
-    return res.status(201).json({ eventId: rows[0].id });
+    return res.status(201).json({ success: true, eventId: rows[0].id });
   } catch (error) {
     console.error("Error creating event:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error." });
   }
 }
 
@@ -42,14 +58,18 @@ export async function getEventDetails(req, res) {
   try {
     const eventId = Number(req.params.id);
     if (isNaN(eventId)) {
-      return res.status(400).json({ error: "Invalid event ID." });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid event ID." });
     }
 
     const eventResult = await pool.query(`SELECT * FROM events WHERE id = $1`, [
       eventId,
     ]);
     if (eventResult.rows.length === 0) {
-      return res.status(404).json({ error: "Event not found." });
+      return res
+        .status(404)
+        .json({ success: false, error: "Event not found." });
     }
 
     const registrationsResult = await pool.query(
@@ -65,10 +85,12 @@ export async function getEventDetails(req, res) {
     const event = eventResult.rows[0];
     event.registrations = registrationsResult.rows;
 
-    return res.json(event);
+    return res.json({ success: true, event });
   } catch (error) {
     console.error("Error fetching event details:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error." });
   }
 }
 
@@ -81,7 +103,7 @@ export async function registerForEvent(req, res) {
     if (isNaN(eventId) || !user_id) {
       return res
         .status(400)
-        .json({ error: "Event ID and user_id are required." });
+        .json({ success: false, error: "Event ID and user_id are required." });
     }
 
     // Check if event exists
@@ -89,17 +111,26 @@ export async function registerForEvent(req, res) {
       eventId,
     ]);
     if (eventRes.rows.length === 0) {
-      return res.status(404).json({ error: "Event not found." });
+      return res
+        .status(404)
+        .json({ success: false, error: "Event not found." });
     }
     const event = eventRes.rows[0];
 
+    // check for if user exists
+    const userRes = await pool.query(`SELECT id FROM users WHERE id = $1`, [
+      user_id,
+    ]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
     // Check if event is in the past
     const now = DateTime.utc();
     const eventDate = DateTime.fromISO(event.event_datetime);
     if (eventDate < now) {
       return res
         .status(400)
-        .json({ error: "Cannot register for past events." });
+        .json({ success: false, error: "Cannot register for past events." });
     }
 
     // Check for duplicate registration
@@ -110,9 +141,10 @@ export async function registerForEvent(req, res) {
       [eventId, user_id]
     );
     if (regRes.rows.length > 0) {
-      return res
-        .status(409)
-        .json({ error: "User is already registered for this event." });
+      return res.status(409).json({
+        success: false,
+        error: "User is already registered for this event.",
+      });
     }
 
     // Check if event is full
@@ -124,7 +156,7 @@ export async function registerForEvent(req, res) {
     );
     const registrationsCount = Number(countRes.rows[0].count);
     if (registrationsCount >= event.capacity) {
-      return res.status(400).json({ error: "Event is full." });
+      return res.status(400).json({ success: false, error: "Event is full." });
     }
 
     // Register user
@@ -136,10 +168,14 @@ export async function registerForEvent(req, res) {
       [eventId, user_id]
     );
 
-    return res.status(201).json({ message: "Registration successful." });
+    return res
+      .status(201)
+      .json({ success: true, message: "Registration successful." });
   } catch (error) {
     console.error("Error registering for event:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error." });
   }
 }
 
@@ -152,7 +188,7 @@ export async function cancelRegistration(req, res) {
     if (isNaN(eventId) || !user_id) {
       return res
         .status(400)
-        .json({ error: "Event ID and user_id are required." });
+        .json({ success: false, error: "Event ID and user_id are required." });
     }
 
     // Check if registration exists
@@ -164,9 +200,10 @@ export async function cancelRegistration(req, res) {
     );
 
     if (regRes.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "User is not registered for this event." });
+      return res.status(404).json({
+        success: false,
+        error: "User is not registered for this event.",
+      });
     }
 
     await pool.query(
@@ -176,10 +213,12 @@ export async function cancelRegistration(req, res) {
       [eventId, user_id]
     );
 
-    return res.json({ message: "Registration cancelled." });
+    return res.json({ success: true, message: "Registration cancelled." });
   } catch (error) {
     console.error("Error cancelling registration:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error." });
   }
 }
 
@@ -198,23 +237,29 @@ export async function listUpcomingEvents(req, res) {
     return res.json(rows);
   } catch (error) {
     console.error("Error listing events:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error." });
   }
 }
 
-// Event Stats
-export async function getEventStats(req, res) {
+// Event Status
+export async function getEventStatus(req, res) {
   try {
     const eventId = Number(req.params.id);
     if (isNaN(eventId)) {
-      return res.status(400).json({ error: "Invalid event ID." });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid event ID." });
     }
 
     const eventRes = await pool.query(`SELECT * FROM events WHERE id = $1`, [
       eventId,
     ]);
     if (eventRes.rows.length === 0) {
-      return res.status(404).json({ error: "Event not found." });
+      return res
+        .status(404)
+        .json({ success: false, error: "Event not found." });
     }
 
     const event = eventRes.rows[0];
@@ -234,12 +279,15 @@ export async function getEventStats(req, res) {
     ).toFixed(2);
 
     return res.json({
+      success: true,
       totalRegistrations,
       remainingCapacity,
       percentageUsed: `${percentageUsed}%`,
     });
   } catch (error) {
-    console.error("Error fetching event stats:", error);
-    return res.status(500).json({ error: "Internal server error." });
+    console.error("Error fetching event status:", error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error." });
   }
 }
